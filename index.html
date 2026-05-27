@@ -24,11 +24,11 @@
     body, html {
       width: 100%; height: 100%;
       font-family: 'Cormorant Garamond', Georgia, serif;
-      background-color: #0e0c0a !important; /* On remet un fond sombre par défaut */
+      background-color: #0e0c0a !important;
       overflow: hidden;
     }
 
-    /* Écran de chargement initial */
+    /* Écran d'accueil et d'activation pour iOS */
     .arjs-loader {
       height: 100%; width: 100%;
       position: absolute; top: 0; left: 0;
@@ -40,22 +40,31 @@
     }
     .arjs-loader p {
       font-family: 'Playfair Display', serif;
-      font-size: 1.2rem; letter-spacing: 0.05em; margin-bottom: 10px;
+      font-size: 1.4rem; letter-spacing: 0.05em; margin-bottom: 20px; text-align: center; padding: 0 1rem;
+    }
+    .start-btn {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--cream);
+      padding: 0.8rem 2rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .start-btn:active {
+      background: var(--gold);
+      color: var(--ink);
     }
 
-    /* Calque UI : Forcé au premier plan absolu pour ne jamais disparaître */
+    /* Calque UI (caché au début, apparaît après activation) */
     .ui-overlay {
-      position: absolute; 
-      inset: 0;
-      z-index: 999 !important; /* Priorité maximale */
+      position: absolute; inset: 0;
+      z-index: 999 !important;
       pointer-events: none;
-      display: flex; 
-      flex-direction: column; 
-      justify-content: space-between;
-    }
-
-    header, .controls-container {
-      pointer-events: auto; /* Permet d'interagir si besoin */
+      display: none; /* Activé en JS */
+      flex-direction: column; justify-content: space-between;
     }
 
     header {
@@ -87,33 +96,29 @@
 
     .a-enter-vr { display: none !important; }
 
-    /* Forcer la scène 3D et la vidéo à rester sagement en arrière-plan */
     a-scene {
-      position: absolute;
-      top: 0; left: 0;
+      position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 1;
     }
-    video {
-      z-index: -1 !important;
-    }
+    video { z-index: -1 !important; position: absolute; top:0; left:0; }
   </style>
 </head>
 <body>
 
   <div class="arjs-loader" id="loader">
-    <p>Analyse de l'œuvre...</p>
-    <span style="font-size: 0.7rem; color: var(--gold);">Veuillez autoriser la caméra</span>
+    <p id="loader-text">Nymphéas — The Resolution Paradox</p>
+    <button class="start-btn" id="start-btn" onclick="initializeAR()">ENTRER DANS L'EXPÉRIENCE</button>
   </div>
 
-  <div class="ui-overlay">
+  <div class="ui-overlay" id="ui">
     <header>
       <p class="museum-tag">Musée de l'Orangerie — Paris</p>
       <h1><em>Nymphéas</em> — The Resolution Paradox</h1>
     </header>
 
     <div class="controls-container">
-      <p class="instruction-tap" id="status-text">Initialisation du flux vidéo...</p>
+      <p class="instruction-tap" id="status-text">Visez le chef-d'œuvre...</p>
 
       <div class="info-strip">
         <div class="info-cell">
@@ -132,84 +137,68 @@
     </div>
   </div>
 
-  <a-scene 
-    embedded 
-    vr-mode-ui="enabled: false;"
-    arjs="sourceType: webcam; debugUIEnabled: false; videoInjected: true;">
-    
-    <a-assets>
-      <img id="monet-clean" src="assets/images/Monet.jpg">
-      <img id="monet-polluted" src="assets/images/Monet%20pollué.png">
-    </a-assets>
-
-    <a-nft
-      type="nft"
-      url="assets/descriptors/monet"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance=".01"
-      smoothThreshold="5">
-      
-      <a-image 
-        id="ar-clean" 
-        src="#monet-clean" 
-        position="0 0 0" 
-        rotation="-90 0 0" 
-        width="150" 
-        height="133"
-        material="transparent: true; opacity: 1;"
-        animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startTwist">
-      </a-image>
-
-      <a-image 
-        id="ar-polluted" 
-        src="#monet-polluted" 
-        position="0 0.1 0" 
-        rotation="-90 0 0" 
-        width="150" 
-        height="133"
-        material="transparent: true; opacity: 0;"
-        animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startTwist">
-      </a-image>
-    </a-nft>
-
-    <a-entity camera></a-entity>
-  </a-scene>
+  <div id="scene-container"></div>
 
   <script>
     const loader = document.getElementById('loader');
-    const statusText = document.getElementById('status-text');
-    const valTruth = document.getElementById('val-truth');
-    const valStyle = document.getElementById('val-style');
-    const valFilter = document.getElementById('val-filter');
+    const loaderText = document.getElementById('loader-text');
+    const startBtn = document.getElementById('start-btn');
+    const ui = document.getElementById('ui');
 
-    const arClean = document.getElementById('ar-clean');
-    const arPolluted = document.getElementById('ar-polluted');
+    // Injection dynamique de la scène après interaction utilisateur
+    function initializeAR() {
+      startBtn.style.display = 'none';
+      loaderText.textContent = "Analyse de la structure picturale...";
 
-    // Événement déclenché dès que la caméra arrière répond
-    window.addEventListener('camera-init', () => {
-       document.body.style.setProperty('background-color', 'transparent', 'important');
-       loader.style.opacity = '0';
-       setTimeout(() => {
-         loader.style.display = 'none';
-         startTimer(); 
-       }, 500);
-    });
+      const sceneHTML = `
+        <a-scene embedded vr-mode-ui="enabled: false;" arjs="sourceType: webcam; debugUIEnabled: false;">
+          <a-assets>
+            <img id="monet-clean" src="assets/images/Monet.jpg">
+            <img id="monet-polluted" src="assets/images/Monet%20pollué.png">
+          </a-assets>
 
-    // Événement de secours si le NFT charge avant
-    window.addEventListener('arjs-nft-loaded', () => {
-       loader.style.display = 'none';
-    });
+          <a-nft type="nft" url="assets/descriptors/monet" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5">
+            <a-image id="ar-clean" src="#monet-clean" position="0 0 0" rotation="-90 0 0" width="150" height="133" material="transparent: true; opacity: 1;"
+                     animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startTwist"></a-image>
+            <a-image id="ar-polluted" src="#monet-polluted" position="0 0.1 0" rotation="-90 0 0" width="150" height="133" material="transparent: true; opacity: 0;"
+                     animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startTwist"></a-image>
+          </a-nft>
+          <a-entity camera></a-entity>
+        </a-scene>
+      `;
+
+      document.getElementById('scene-container').innerHTML = sceneHTML;
+      ui.style.display = 'flex';
+
+      // Écoute de l'initialisation caméra native
+      window.addEventListener('camera-init', () => {
+         document.body.style.setProperty('background-color', 'transparent', 'important');
+         loader.style.opacity = '0';
+         setTimeout(() => {
+           loader.style.display = 'none';
+           startTimer(); 
+         }, 500);
+      });
+    }
 
     function startTimer() {
+      const statusText = document.getElementById('status-text');
+      const valTruth = document.getElementById('val-truth');
+      const valStyle = document.getElementById('val-style');
+      const valFilter = document.getElementById('val-filter');
+      const arClean = document.getElementById('ar-clean');
+      const arPolluted = document.getElementById('ar-polluted');
+
       statusText.textContent = "Chef-d'œuvre d'origine affiché (5s)";
       
       setTimeout(() => {
         statusText.textContent = "Altération de la réalité en cours...";
         statusText.style.color = "#e24b4a";
 
-        arClean.emit('startTwist');
-        arPolluted.emit('startTwist');
+        if(arClean && arPolluted) {
+          arClean.emit('startTwist');
+          arPolluted.emit('startTwist');
+        }
 
         setTimeout(() => {
           valTruth.textContent = '100%';
