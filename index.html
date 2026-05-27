@@ -1,186 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A-Frame + 8th Wall Examples</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nymphéas — The Resolution Paradox</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+  
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      min-height: 100vh;
-      padding: 2rem;
+    :root {
+      --gold: #b8960c;
+      --gold-light: #d4af37;
+      --cream: #f5f0e8;
+      --ink: #1a1714;
+      --muted: #6b6055;
     }
 
-    h1 {
+    body, html {
+      width: 100%; height: 100%;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background-color: #000;
+      overflow: hidden;
+    }
+
+    /* Écran de chargement initial */
+    .arjs-loader {
+      height: 100%; width: 100%;
+      position: absolute; top: 0; left: 0;
+      background-color: #0e0c0a;
+      z-index: 9999;
+      display: flex; justify-content: center; align-items: center;
+      color: var(--cream); flex-direction: column;
+      transition: opacity 0.5s ease;
+    }
+    .arjs-loader p {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; letter-spacing: 0.05em; margin-bottom: 10px;
+    }
+
+    /* Calque UI par-dessus la caméra */
+    .ui-overlay {
+      position: absolute; inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+
+    header {
+      text-align: center; padding: 1.5rem 1rem;
+      background: linear-gradient(to bottom, rgba(14, 12, 10, 0.95) 40%, rgba(14, 12, 10, 0));
+      color: var(--cream);
+    }
+    .museum-tag {
+      font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.3rem;
+    }
+    h1 { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 400; }
+    h1 em { font-style: italic; color: var(--gold-light); }
+
+    .controls-container {
+      background: linear-gradient(to top, rgba(14, 12, 10, 0.95) 80%, rgba(14, 12, 10, 0));
+      padding: 2rem 1.5rem 2.5rem 1.5rem;
+      color: var(--cream);
       text-align: center;
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+    }
+    
+    .instruction-tap {
+      font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cream); opacity: 0.7; margin-bottom: 1rem;
+      transition: all 1s ease;
     }
 
-    .subtitle {
-      text-align: center;
-      color: #8b949e;
-      margin-bottom: 2.5rem;
-    }
+    .info-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(180,150,12,0.2); border: 1px solid rgba(180,150,12,0.15); }
+    .info-cell { background: rgba(14, 12, 10, 0.95); padding: 0.5rem; text-align: center; }
+    .info-val { font-family: 'Playfair Display', serif; font-size: 0.95rem; display: block; transition: color 0.5s; }
+    .info-key { font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.25rem;
-      max-width: 960px;
-      margin: 0 auto;
-    }
-
-    .card {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      padding: 1.5rem;
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .card:hover {
-      border-color: #58a6ff;
-      transform: translateY(-2px);
-    }
-
-    .card-number {
-      display: inline-block;
-      background: #58a6ff;
-      color: #0d1117;
-      font-weight: 700;
-      font-size: 0.85rem;
-      width: 2rem;
-      height: 2rem;
-      line-height: 2rem;
-      text-align: center;
-      border-radius: 6px;
-      margin-bottom: 0.75rem;
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-    }
-
-    .card-path {
-      font-size: 0.8rem;
-      color: #8b949e;
-      font-family: monospace;
-    }
+    .a-enter-vr { display: none !important; }
   </style>
 </head>
 <body>
-  <h1>A-Frame + 8th Wall Examples</h1>
-  <p class="subtitle">Click a card to open the example</p>
 
-  <h2 style="text-align:center; margin: 0 auto 0.3rem; max-width:960px; font-size:1.2rem; color:#8b949e;">A-Frame (8frame)</h2>
-  <p style="text-align:center; color:#6e7681; font-size:0.85rem; margin-bottom:1.5rem;">Uses 8frame 1.3.0 (A-Frame fork) with Three.js r137 — declarative HTML approach</p>
-
-  <div class="grid">
-    <a class="card" href="examples/01_primitives.html">
-      <span class="card-number">01</span>
-      <div class="card-title">Primitives</div>
-      <div class="card-path">examples/01_primitives.html</div>
-    </a>
-    <a class="card" href="examples/02_text_msdf.html">
-      <span class="card-number">02</span>
-      <div class="card-title">Text MSDF</div>
-      <div class="card-path">examples/02_text_msdf.html</div>
-    </a>
-    <a class="card" href="examples/03_images.html">
-      <span class="card-number">03</span>
-      <div class="card-title">Images</div>
-      <div class="card-path">examples/03_images.html</div>
-    </a>
-    <a class="card" href="examples/04_3d_models.html">
-      <span class="card-number">04</span>
-      <div class="card-title">3D Models</div>
-      <div class="card-path">examples/04_3d_models.html</div>
-    </a>
-    <a class="card" href="examples/05_video_chroma.html">
-      <span class="card-number">05</span>
-      <div class="card-title">Video Chroma</div>
-      <div class="card-path">examples/05_video_chroma.html</div>
-    </a>
-    <a class="card" href="examples/06_audio.html">
-      <span class="card-number">06</span>
-      <div class="card-title">Audio</div>
-      <div class="card-path">examples/06_audio.html</div>
-    </a>
-    <a class="card" href="examples/07_p5js.html">
-      <span class="card-number">07</span>
-      <div class="card-title">p5.js</div>
-      <div class="card-path">examples/07_p5js.html</div>
-    </a>
-    <a class="card" href="examples/08_gaussian_splat.html">
-      <span class="card-number">08</span>
-      <div class="card-title">Gaussian Splat</div>
-      <div class="card-path">examples/08_gaussian_splat.html</div>
-    </a>
-    <a class="card" href="examples/09_multi_targets.html">
-      <span class="card-number">09</span>
-      <div class="card-title">Multi Targets</div>
-      <div class="card-path">examples/09_multi_targets.html</div>
-    </a>
+  <div class="arjs-loader" id="loader">
+    <p>Analyse de l'œuvre...</p>
+    <span style="font-size: 0.7rem; color: var(--gold);">Veuillez autoriser la caméra</span>
   </div>
 
-  <h2 style="text-align:center; margin: 2.5rem auto 0.3rem; max-width:960px; font-size:1.2rem; color:#8b949e;">Raw Three.js r178</h2>
-  <p style="text-align:center; color:#6e7681; font-size:0.85rem; margin-bottom:1.5rem;">Same examples rewritten with raw Three.js + XR8 pipeline hooks — enables Spark.js Gaussian Splatting</p>
+  <div class="ui-overlay">
+    <header>
+      <p class="museum-tag">Musée de l'Orangerie — Paris</p>
+      <h1><em>Nymphéas</em> — The Resolution Paradox</h1>
+    </header>
 
-  <div class="grid">
-    <a class="card" href="examples_threejs/01_primitives.html" style="border-color:#30363d;">
-      <span class="card-number" style="background:#f0883e;">01</span>
-      <div class="card-title">Primitives</div>
-      <div class="card-path">examples_threejs/01_primitives.html</div>
-    </a>
-    <a class="card" href="examples_threejs/02_text_msdf.html">
-      <span class="card-number" style="background:#f0883e;">02</span>
-      <div class="card-title">Text &amp; Fonts</div>
-      <div class="card-path">examples_threejs/02_text_msdf.html</div>
-    </a>
-    <a class="card" href="examples_threejs/03_images.html">
-      <span class="card-number" style="background:#f0883e;">03</span>
-      <div class="card-title">Images</div>
-      <div class="card-path">examples_threejs/03_images.html</div>
-    </a>
-    <a class="card" href="examples_threejs/04_3d_models.html">
-      <span class="card-number" style="background:#f0883e;">04</span>
-      <div class="card-title">3D Models</div>
-      <div class="card-path">examples_threejs/04_3d_models.html</div>
-    </a>
-    <a class="card" href="examples_threejs/05_video_chroma.html">
-      <span class="card-number" style="background:#f0883e;">05</span>
-      <div class="card-title">Video Chroma</div>
-      <div class="card-path">examples_threejs/05_video_chroma.html</div>
-    </a>
-    <a class="card" href="examples_threejs/06_audio.html">
-      <span class="card-number" style="background:#f0883e;">06</span>
-      <div class="card-title">Audio</div>
-      <div class="card-path">examples_threejs/06_audio.html</div>
-    </a>
-    <a class="card" href="examples_threejs/07_p5js.html">
-      <span class="card-number" style="background:#f0883e;">07</span>
-      <div class="card-title">p5.js</div>
-      <div class="card-path">examples_threejs/07_p5js.html</div>
-    </a>
-    <a class="card" href="examples_threejs/08_gaussian_splat.html">
-      <span class="card-number" style="background:#f0883e;">08</span>
-      <div class="card-title">Gaussian Splat (Spark.js)</div>
-      <div class="card-path">examples_threejs/08_gaussian_splat.html</div>
-    </a>
-    <a class="card" href="examples_threejs/09_multi_targets.html">
-      <span class="card-number" style="background:#f0883e;">09</span>
-      <div class="card-title">Multi Targets</div>
-      <div class="card-path">examples_threejs/09_multi_targets.html</div>
-    </a>
+    <div class="controls-container">
+      <p class="instruction-tap" id="status-text">Analyse de la structure picturale...</p>
+
+      <div class="info-strip">
+        <div class="info-cell">
+          <span class="info-val" id="val-truth">0%</span>
+          <span class="info-key">Pollution</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-val" id="val-style" style="color: var(--gold-light);">Monet</span>
+          <span class="info-key">Filtre Visuel</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-val" id="val-filter">Actif</span>
+          <span class="info-key">Filtre Analogique</span>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-assets>
+      <img id="monet-clean" src="assets/images/Monet.jpg">
+      <img id="monet-polluted" src="assets/images/Monet%20pollué.png">
+    </a-assets>
+
+    <a-nft
+      type="nft"
+      url="assets/descriptors/monet"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance=".01"
+      smoothThreshold="5">
+      
+      <a-image 
+        id="ar-clean" 
+        src="#monet-clean" 
+        position="0 0 0" 
+        rotation="-90 0 0" 
+        width="150" 
+        height="133"
+        material="transparent: true; opacity: 1;"
+        animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startTwist">
+      </a-image>
+
+      <a-image 
+        id="ar-polluted" 
+        src="#monet-polluted" 
+        position="0 0.1 0" 
+        rotation="-90 0 0" 
+        width="150" 
+        height="133"
+        material="transparent: true; opacity: 0;"
+        animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startTwist">
+      </a-image>
+    </a-nft>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    const loader = document.getElementById('loader');
+    const statusText = document.getElementById('status-text');
+    const valTruth = document.getElementById('val-truth');
+    const valStyle = document.getElementById('val-style');
+    const valFilter = document.getElementById('val-filter');
+
+    const arClean = document.getElementById('ar-clean');
+    const arPolluted = document.getElementById('ar-polluted');
+
+    // 1. Gestion de la disparition du loader caméra
+    window.addEventListener('camera-init', () => {
+       loader.style.opacity = '0';
+       setTimeout(() => {
+         loader.style.display = 'none';
+         startTimer(); // On lance le compte à rebours dès que la caméra est prête
+       }, 500);
+    });
+
+    window.addEventListener('arjs-nft-loaded', () => {
+       loader.style.display = 'none';
+    });
+
+    // 2. Logique du Timer de 5 secondes pour la transition de flou
+    function startTimer() {
+      statusText.textContent = "Chef-d'œuvre d'origine affiché (5s)";
+      
+      setTimeout(() => {
+        // Changement de texte juste avant le fondu
+        statusText.textContent = "Altération de la réalité en cours...";
+        statusText.style.color = "#e24b4a";
+
+        // Déclenchement des animations A-Frame (fondu croisé simulant la perte de mise au point)
+        arClean.emit('startTwist');
+        arPolluted.emit('startTwist');
+
+        // Mise à jour de l'UI du musée pendant la transition
+        setTimeout(() => {
+          valTruth.textContent = '100%';
+          valStyle.textContent = 'Vérité Nue';
+          valStyle.style.color = '#e24b4a';
+          valFilter.textContent = 'Désactivé';
+          valFilter.style.color = '#e24b4a';
+          statusText.textContent = "Résolution Paradoxale atteinte.";
+        }, 2000); // 2000ms correspond à la durée (dur: 2000) de l'animation
+
+      }, 5000); // 5000ms = 5 secondes d'attente
+    }
+  </script>
 </body>
 </html>
