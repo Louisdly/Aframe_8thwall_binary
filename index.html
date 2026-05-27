@@ -84,7 +84,11 @@
       font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cream); opacity: 0.7; margin-bottom: 1.2rem;
     }
 
-    /* MODIFICATION : Le bouton est désormais affiché en bloc dès le début */
+    /* Conteneur pour aligner les boutons proprement */
+    .btn-wrap {
+      margin-bottom: 1.5rem;
+    }
+
     .action-btn {
       pointer-events: auto;
       background: transparent;
@@ -95,18 +99,27 @@
       font-size: 0.9rem;
       letter-spacing: 0.1em;
       cursor: pointer;
-      margin-bottom: 1.5rem;
       transition: all 0.3s ease;
-      display: inline-block; 
     }
     .action-btn:active {
       background: var(--gold);
       color: var(--ink);
     }
 
+    /* Bouton Reset (Masqué au début) */
+    #reset-btn {
+      display: none;
+      border-color: #6b6055;
+      color: #6b6055;
+    }
+    #reset-btn:active {
+      background: #6b6055;
+      color: var(--cream);
+    }
+
     .info-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(180,150,12,0.2); border: 1px solid rgba(180,150,12,0.15); }
     .info-cell { background: rgba(14, 12, 10, 0.95); padding: 0.5rem; text-align: center; }
-    .info-val { font-family: 'Playfair Display', serif; font-size: 0.95rem; display: block; }
+    .info-val { font-family: 'Playfair Display', serif; font-size: 0.95rem; display: block; transition: color 0.5s ease; }
     .info-key { font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   </style>
 </head>
@@ -121,7 +134,10 @@
     <div class="controls-container">
       <p class="instruction-tap" id="status-text">Point at the artwork and press trigger</p>
 
-      <button class="action-btn" id="twist-btn" onclick="triggerTwistEffect()">TRIGGER TWIST</button>
+      <div class="btn-wrap">
+        <button class="action-btn" id="twist-btn" onclick="triggerTwistEffect()">TRIGGER TWIST</button>
+        <button class="action-btn" id="reset-btn" onclick="triggerResetEffect()">RESET ARTWORK</button>
+      </div>
 
       <div class="info-strip">
         <div class="info-cell">
@@ -165,7 +181,8 @@
         width="1.35" 
         height="1.5"
         material="transparent: true; opacity: 1;"
-        animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startTwist">
+        animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startTwist"
+        animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startReset">
       </a-image>
 
       <a-image 
@@ -176,7 +193,8 @@
         width="1.35" 
         height="1.5"
         material="transparent: true; opacity: 0;"
-        animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startTwist">
+        animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startTwist"
+        animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startReset">
       </a-image>
 
     </xrextras-named-image-target>
@@ -184,21 +202,22 @@
 
   <script>
     const twistBtn = document.getElementById('twist-btn');
+    const resetBtn = document.getElementById('reset-btn');
     const statusText = document.getElementById('status-text');
+    
+    const valTruth = document.getElementById('val-truth');
+    const valStyle = document.getElementById('val-style');
+    const valFilter = document.getElementById('val-filter');
+    
+    const arClean = document.getElementById('ar-clean');
+    const arPolluted = document.getElementById('ar-polluted');
 
-    // Le bouton est là dès le début, plus besoin d'attendre l'événement de détection matériel
+    // 1. Passage du propre au pollué (Twist)
     function triggerTwistEffect() {
-      twistBtn.style.display = "none";
+      twistBtn.style.display = "none"; // Cache le bouton Twist
       
       statusText.textContent = "Altering reality in progress...";
       statusText.style.color = "#e24b4a";
-
-      const valTruth = document.getElementById('val-truth');
-      const valStyle = document.getElementById('val-style');
-      const valFilter = document.getElementById('val-filter');
-      
-      const arClean = document.getElementById('ar-clean');
-      const arPolluted = document.getElementById('ar-polluted');
 
       if(arClean && arPolluted) {
         arClean.emit('startTwist');
@@ -207,11 +226,40 @@
 
       setTimeout(() => {
         valTruth.textContent = '100%';
+        valTruth.style.color = '#e24b4a';
         valStyle.textContent = 'Naked Truth';
         valStyle.style.color = '#e24b4a';
         valFilter.textContent = 'Disabled';
         valFilter.style.color = '#e24b4a';
         statusText.textContent = "Paradoxical Resolution reached.";
+        
+        resetBtn.style.display = "inline-block"; // Affiche le bouton Reset
+      }, 2000);
+    }
+
+    // 2. Retour en arrière du pollué au propre (Reset)
+    function triggerResetEffect() {
+      resetBtn.style.display = "none"; // Cache le bouton Reset
+      
+      statusText.textContent = "Restoring analog filters...";
+      statusText.style.color = "var(--gold-light)";
+
+      if(arClean && arPolluted) {
+        arClean.emit('startReset');
+        arPolluted.emit('startReset');
+      }
+
+      setTimeout(() => {
+        valTruth.textContent = '0%';
+        valTruth.style.color = 'var(--cream)';
+        valStyle.textContent = 'Monet';
+        valStyle.style.color = 'var(--gold-light)';
+        valFilter.textContent = 'Active';
+        valFilter.style.color = 'var(--cream)';
+        statusText.textContent = "Point at the artwork and press trigger";
+        statusText.style.color = 'var(--cream)';
+        
+        twistBtn.style.display = "inline-block"; // Réaffiche le bouton Twist initial
       }, 2000);
     }
   </script>
