@@ -75,13 +75,33 @@
 
     .controls-container {
       background: linear-gradient(to top, rgba(14, 12, 10, 0.95) 80%, rgba(14, 12, 10, 0));
-      padding: 2rem 1.5rem 2.5rem 1.5rem;
+      padding: 1.5rem 1.5rem 2.5rem 1.5rem;
       color: var(--cream);
       text-align: center;
     }
     
     .instruction-tap {
-      font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cream); opacity: 0.7; margin-bottom: 1rem;
+      font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cream); opacity: 0.7; margin-bottom: 1.2rem;
+    }
+
+    /* Style du nouveau bouton d'action */
+    .action-btn {
+      pointer-events: auto; /* Permet de cliquer sur le bouton malgré le calque transparent */
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--cream);
+      padding: 0.6rem 2rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+      display: none; /* Masqué par défaut, apparaît quand l'image est détectée */
+    }
+    .action-btn:active {
+      background: var(--gold);
+      color: var(--ink);
     }
 
     .info-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(180,150,12,0.2); border: 1px solid rgba(180,150,12,0.15); }
@@ -100,6 +120,8 @@
 
     <div class="controls-container">
       <p class="instruction-tap" id="status-text">Scan the printed Monet...</p>
+
+      <button class="action-btn" id="twist-btn" onclick="triggerTwistEffect()">TRIGGER TWIST</button>
 
       <div class="info-strip">
         <div class="info-cell">
@@ -150,7 +172,7 @@
         id="ar-polluted" 
         src="#monet-polluted" 
         position="0 0 0.02" 
-        rotation="0 0 0" 
+        rotation="0 0 90" 
         width="1.35" 
         height="1.5"
         material="transparent: true; opacity: 0;"
@@ -162,19 +184,26 @@
 
   <script>
     const targetElement = document.getElementById('monet-target-element');
-    let timerStarted = false;
+    const twistBtn = document.getElementById('twist-btn');
+    const statusText = document.getElementById('status-text');
 
+    // Événement : l'image imprimée est détectée par la caméra
     if (targetElement) {
       targetElement.addEventListener('xrimagefound', () => {
-        startTimer();
+        statusText.textContent = "Artwork detected. Ready to transform.";
+        statusText.style.color = "var(--gold-light)";
+        twistBtn.style.display = "inline-block"; // On affiche le bouton à ce moment-là
       });
     }
 
-    function startTimer() {
-      if (timerStarted) return; 
-      timerStarted = true;
+    // Fonction déclenchée lors du clic sur le bouton "TRIGGER TWIST"
+    function triggerTwistEffect() {
+      // Masquer le bouton après le clic pour éviter les doubles clics
+      twistBtn.style.display = "none";
+      
+      statusText.textContent = "Altering reality in progress...";
+      statusText.style.color = "#e24b4a";
 
-      const statusText = document.getElementById('status-text');
       const valTruth = document.getElementById('val-truth');
       const valStyle = document.getElementById('val-style');
       const valFilter = document.getElementById('val-filter');
@@ -182,28 +211,21 @@
       const arClean = document.getElementById('ar-clean');
       const arPolluted = document.getElementById('ar-polluted');
 
-      statusText.textContent = "Artwork detected. Analyzing original (5s)";
-      statusText.style.color = "var(--gold-light)";
-      
+      // Déclenchement des animations de flou/fondu croisé A-Frame
+      if(arClean && arPolluted) {
+        arClean.emit('startTwist');
+        arPolluted.emit('startTwist');
+      }
+
+      // Mise à jour finale des indicateurs du musée après les 2 secondes d'animation
       setTimeout(() => {
-        statusText.textContent = "Altering reality in progress...";
-        statusText.style.color = "#e24b4a";
-
-        if(arClean && arPolluted) {
-          arClean.emit('startTwist');
-          arPolluted.emit('startTwist');
-        }
-
-        setTimeout(() => {
-          valTruth.textContent = '100%';
-          valStyle.textContent = 'Naked Truth';
-          valStyle.style.color = '#e24b4a';
-          valFilter.textContent = 'Disabled';
-          valFilter.style.color = '#e24b4a';
-          statusText.textContent = "Paradoxical Resolution reached.";
-        }, 2000);
-
-      }, 5000); 
+        valTruth.textContent = '100%';
+        valStyle.textContent = 'Naked Truth';
+        valStyle.style.color = '#e24b4a';
+        valFilter.textContent = 'Disabled';
+        valFilter.style.color = '#e24b4a';
+        statusText.textContent = "Paradoxical Resolution reached.";
+      }, 2000);
     }
   </script>
 </body>
