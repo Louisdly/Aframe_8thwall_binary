@@ -10,7 +10,7 @@
   <script src="https://cdn.8thwall.com/web/xrextras/xrextras.js"></script>
 
   <script async src="../engine/xr.js" data-preload-chunks="slam"></script>
-  
+
   <script>
     AFRAME.registerComponent('target-installer', {
       init: function () {
@@ -84,9 +84,9 @@
       font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cream); opacity: 0.7; margin-bottom: 1.2rem;
     }
 
-    /* Style du nouveau bouton d'action */
+    /* MODIFICATION : Le bouton est désormais affiché en bloc dès le début */
     .action-btn {
-      pointer-events: auto; /* Permet de cliquer sur le bouton malgré le calque transparent */
+      pointer-events: auto;
       background: transparent;
       border: 1px solid var(--gold);
       color: var(--cream);
@@ -97,7 +97,7 @@
       cursor: pointer;
       margin-bottom: 1.5rem;
       transition: all 0.3s ease;
-      display: none; /* Masqué par défaut, apparaît quand l'image est détectée */
+      display: inline-block; 
     }
     .action-btn:active {
       background: var(--gold);
@@ -119,7 +119,7 @@
     </header>
 
     <div class="controls-container">
-      <p class="instruction-tap" id="status-text">Scan the printed Monet...</p>
+      <p class="instruction-tap" id="status-text">Point at the artwork and press trigger</p>
 
       <button class="action-btn" id="twist-btn" onclick="triggerTwistEffect()">TRIGGER TWIST</button>
 
@@ -183,22 +183,11 @@
   </a-scene>
 
   <script>
-    const targetElement = document.getElementById('monet-target-element');
     const twistBtn = document.getElementById('twist-btn');
     const statusText = document.getElementById('status-text');
 
-    // Événement : l'image imprimée est détectée par la caméra
-    if (targetElement) {
-      targetElement.addEventListener('xrimagefound', () => {
-        statusText.textContent = "Artwork detected. Ready to transform.";
-        statusText.style.color = "var(--gold-light)";
-        twistBtn.style.display = "inline-block"; // On affiche le bouton à ce moment-là
-      });
-    }
-
-    // Fonction déclenchée lors du clic sur le bouton "TRIGGER TWIST"
+    // Le bouton est là dès le début, plus besoin d'attendre l'événement de détection matériel
     function triggerTwistEffect() {
-      // Masquer le bouton après le clic pour éviter les doubles clics
       twistBtn.style.display = "none";
       
       statusText.textContent = "Altering reality in progress...";
@@ -211,13 +200,11 @@
       const arClean = document.getElementById('ar-clean');
       const arPolluted = document.getElementById('ar-polluted');
 
-      // Déclenchement des animations de flou/fondu croisé A-Frame
       if(arClean && arPolluted) {
         arClean.emit('startTwist');
         arPolluted.emit('startTwist');
       }
 
-      // Mise à jour finale des indicateurs du musée après les 2 secondes d'animation
       setTimeout(() => {
         valTruth.textContent = '100%';
         valStyle.textContent = 'Naked Truth';
