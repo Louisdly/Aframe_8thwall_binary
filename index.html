@@ -28,7 +28,6 @@
       overflow: hidden;
     }
 
-    /* Écran d'accueil et d'activation pour iOS */
     .arjs-loader {
       height: 100%; width: 100%;
       position: absolute; top: 0; left: 0;
@@ -58,12 +57,11 @@
       color: var(--ink);
     }
 
-    /* Calque UI (caché au début, apparaît après activation) */
     .ui-overlay {
       position: absolute; inset: 0;
       z-index: 999 !important;
       pointer-events: none;
-      display: none; /* Activé en JS */
+      display: none;
       flex-direction: column; justify-content: space-between;
     }
 
@@ -118,7 +116,7 @@
     </header>
 
     <div class="controls-container">
-      <p class="instruction-tap" id="status-text">Visez le chef-d'œuvre...</p>
+      <p class="instruction-tap" id="status-text">Recherche du Monet imprimé...</p>
 
       <div class="info-strip">
         <div class="info-cell">
@@ -145,11 +143,11 @@
     const startBtn = document.getElementById('start-btn');
     const ui = document.getElementById('ui');
 
-    // Injection dynamique de la scène après interaction utilisateur
     function initializeAR() {
       startBtn.style.display = 'none';
       loaderText.textContent = "Analyse de la structure picturale...";
 
+      // Création de la scène avec des ratios d'image adaptés (150m de large sur 135m de haut pour correspondre au tableau)
       const sceneHTML = `
         <a-scene embedded vr-mode-ui="enabled: false;" arjs="sourceType: webcam; debugUIEnabled: false;">
           <a-assets>
@@ -158,9 +156,9 @@
           </a-assets>
 
           <a-nft type="nft" url="assets/descriptors/monet" smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5">
-            <a-image id="ar-clean" src="#monet-clean" position="0 0 0" rotation="-90 0 0" width="150" height="133" material="transparent: true; opacity: 1;"
+            <a-image id="ar-clean" src="#monet-clean" position="75 0 -67" rotation="-90 0 0" width="150" height="135" material="transparent: true; opacity: 1;"
                      animation__fadeout="property: material.opacity; from: 1; to: 0; dur: 2000; startEvents: startTwist"></a-image>
-            <a-image id="ar-polluted" src="#monet-polluted" position="0 0.1 0" rotation="-90 0 0" width="150" height="133" material="transparent: true; opacity: 0;"
+            <a-image id="ar-polluted" src="#monet-polluted" position="75 0.2 -67" rotation="-90 0 0" width="150" height="135" material="transparent: true; opacity: 0;"
                      animation__fadein="property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: startTwist"></a-image>
           </a-nft>
           <a-entity camera></a-entity>
@@ -170,18 +168,25 @@
       document.getElementById('scene-container').innerHTML = sceneHTML;
       ui.style.display = 'flex';
 
-      // Écoute de l'initialisation caméra native
       window.addEventListener('camera-init', () => {
          document.body.style.setProperty('background-color', 'transparent', 'important');
          loader.style.opacity = '0';
          setTimeout(() => {
            loader.style.display = 'none';
-           startTimer(); 
          }, 500);
+      });
+
+      // Se déclenche UNIQUEMENT quand le téléphone reconnaît l'image imprimée
+      window.addEventListener('markerFound', () => {
+         startTimer();
       });
     }
 
+    let timerStarted = false;
     function startTimer() {
+      if (timerStarted) return; // Sécurité pour ne pas relancer le timer plusieurs fois
+      timerStarted = true;
+
       const statusText = document.getElementById('status-text');
       const valTruth = document.getElementById('val-truth');
       const valStyle = document.getElementById('val-style');
@@ -189,7 +194,8 @@
       const arClean = document.getElementById('ar-clean');
       const arPolluted = document.getElementById('ar-polluted');
 
-      statusText.textContent = "Chef-d'œuvre d'origine affiché (5s)";
+      statusText.textContent = "Œuvre détectée. Analyse d'origine (5s)";
+      statusText.style.color = "var(--gold-light)";
       
       setTimeout(() => {
         statusText.textContent = "Altération de la réalité en cours...";
