@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Nymphéas — The Resolution Paradox</title>
+  <title>Water Lilies — The Resolution Paradox</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,400;0,600;1,400&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
 
@@ -12,23 +12,26 @@
   <script async src="../engine/xr.js" data-preload-chunks="slam"></script>
 
   <script>
-    const onxrloaded = () => {
-      XR8.XrController.configure({
-        imageTargetData:[{
-          "name": "monet-target",
-          "type": "PLANAR",
-          // Assure-toi que ton image imprimée est bien ici et nommée ainsi
-          "imagePath": "assets/images/Monet.jpg", 
-          "properties": {
-            "left": 0, "top": 0,
-            "width": 1000, "height": 900,
-            "originalWidth": 1000, "originalHeight": 900,
-            "isRotated": false
-          }
-        }]
-      });
-    };
-    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+    AFRAME.registerComponent('target-installer', {
+      init: function () {
+        const setupTarget = () => {
+          XR8.XrController.configure({
+            imageTargetData: [{
+              "name": "monet-target",
+              "type": "PLANAR",
+              "imagePath": "assets/images/Monet.jpg", 
+              "properties": {
+                "left": 0, "top": 0,
+                "width": 1000, "height": 900,
+                "originalWidth": 1000, "originalHeight": 900,
+                "isRotated": false
+              }
+            }]
+          });
+        };
+        window.XR8 ? setupTarget() : window.addEventListener('xrloaded', setupTarget);
+      }
+    });
   </script>
 
   <style>
@@ -49,7 +52,7 @@
       overflow: hidden;
     }
 
-    /* Calque UI par-dessus l'AR */
+    /* UI Layer over AR */
     .ui-overlay {
       position: absolute; inset: 0;
       z-index: 999 !important;
@@ -92,11 +95,11 @@
   <div class="ui-overlay">
     <header>
       <p class="museum-tag">Musée de l'Orangerie — Paris</p>
-      <h1><em>Nymphéas</em> — The Resolution Paradox</h1>
+      <h1><em>Water Lilies</em> — The Resolution Paradox</h1>
     </header>
 
     <div class="controls-container">
-      <p class="instruction-tap" id="status-text">Visez le Monet imprimé...</p>
+      <p class="instruction-tap" id="status-text">Scan the printed Monet...</p>
 
       <div class="info-strip">
         <div class="info-cell">
@@ -105,17 +108,18 @@
         </div>
         <div class="info-cell">
           <span class="info-val" id="val-style" style="color: var(--gold-light);">Monet</span>
-          <span class="info-key">Filtre Visuel</span>
+          <span class="info-key">Visual Filter</span>
         </div>
         <div class="info-cell">
-          <span class="info-val" id="val-filter">Actif</span>
-          <span class="info-key">Filtre Analogique</span>
+          <span class="info-val" id="val-filter">Active</span>
+          <span class="info-key">Analog Filter</span>
         </div>
       </div>
     </div>
   </div>
 
   <a-scene
+    target-installer
     xrextras-gesture-detector
     xrextras-almost-there
     xrextras-loading
@@ -176,11 +180,11 @@
       const arClean = document.getElementById('ar-clean');
       const arPolluted = document.getElementById('ar-polluted');
 
-      statusText.textContent = "Œuvre détectée. Analyse d'origine (5s)";
+      statusText.textContent = "Artwork detected. Analyzing original (5s)";
       statusText.style.color = "var(--gold-light)";
       
       setTimeout(() => {
-        statusText.textContent = "Altération de la réalité en cours...";
+        statusText.textContent = "Altering reality in progress...";
         statusText.style.color = "#e24b4a";
 
         if(arClean && arPolluted) {
@@ -190,11 +194,11 @@
 
         setTimeout(() => {
           valTruth.textContent = '100%';
-          valStyle.textContent = 'Vérité Nue';
+          valStyle.textContent = 'Naked Truth';
           valStyle.style.color = '#e24b4a';
-          valFilter.textContent = 'Désactivé';
+          valFilter.textContent = 'Disabled';
           valFilter.style.color = '#e24b4a';
-          statusText.textContent = "Résolution Paradoxale atteinte.";
+          statusText.textContent = "Paradoxical Resolution reached.";
         }, 2000);
 
       }, 5000); 
