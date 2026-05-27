@@ -11,6 +11,26 @@
 
   <script async src="../engine/xr.js" data-preload-chunks="slam"></script>
 
+  <script>
+    const onxrloaded = () => {
+      XR8.XrController.configure({
+        imageTargetData:[{
+          "name": "monet-target",
+          "type": "PLANAR",
+          // Assure-toi que ton image imprimée est bien ici et nommée ainsi
+          "imagePath": "assets/images/Monet.jpg", 
+          "properties": {
+            "left": 0, "top": 0,
+            "width": 1000, "height": 900,
+            "originalWidth": 1000, "originalHeight": 900,
+            "isRotated": false
+          }
+        }]
+      });
+    };
+    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -109,7 +129,7 @@
 
     <a-camera position="0 4 10"></a-camera>
 
-    <xrextras-named-image-target name="my-poster" id="monet-target-element">
+    <xrextras-named-image-target name="monet-target" id="monet-target-element">
 
       <a-image 
         id="ar-clean" 
@@ -124,7 +144,7 @@
       <a-image 
         id="ar-polluted" 
         src="#monet-polluted" 
-        position="0 0 0.05" 
+        position="0 0 0.02" 
         width="1.5" 
         height="1.35"
         material="transparent: true; opacity: 0;"
@@ -135,7 +155,6 @@
   </a-scene>
 
   <script>
-    // Correction de l'écouteur d'événement pour correspondre au cycle de vie de 8th Wall
     const targetElement = document.getElementById('monet-target-element');
     let timerStarted = false;
 
